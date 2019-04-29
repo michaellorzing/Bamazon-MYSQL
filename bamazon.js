@@ -6,7 +6,7 @@ var connection = mysql.createConnection({
   host: "localhost",
   port: 3306,
   user: "root",
-  password: "yescubanb12",
+  password: process.env.DB_PW,
   database: "bamazon_db"
 });
 
@@ -14,46 +14,76 @@ var connection = mysql.createConnection({
 function displayCurrent() {
   connection.query("SELECT * FROM products", function (err, res) {
     if (err) throw err;
-    for (var i = 0; i < res.length; i++)
-    console.log(res);
+    var selectctString = "";
+    for (var i = 0; i < res.length; i++) {
+      selectString = "Item ID: " + res[i].id + " | ";
+      selectString += "Product name: " + res[i].product_name + " | ";
+      selectString += "Department: " + res[i].department_name + " | ";
+      selectString += "Price: " + res[i].price + " | "
+      console.log(selectString)
+    };
+    runApp()
   });
-}
+};
 
-
-
-connection.connect(function (err) {
-  if (err) throw err;
-  displayCurrent()
-  runApp();
-})
+displayCurrent()
 
 function runApp() {
   inquirer.prompt([{
         name: "whatToBuy",
         type: "input",
-        message: "What is the ID of the item you'd like to buy?"
+        message: "What is the ID of the item you'd like to buy?",
+        validate: function (value) {
+          if (isNaN(value) === false) {
+            return true;
+          }
+          return false;
+        }
       },
       {
         name: "howMany",
         type: "input",
-        message: "How many would you like to purchase?"
+        message: "How many would you like to purchase?",
+        validate: function (value) {
+          if (isNaN(value) === false) {
+            return true;
+          }
+          return false;
+        }
       }
     ])
     .then(function (answer) {
-      if (answer.howMany > res.stock_quantity) {
-        console.log("Quantity too low. Please make another selection.")
-        runApp();
-      } else {
-        fulfillOrder()
-      }
-    })
+      connection.query(`SELECT * FROM products WHERE id =  ${answer.whatToBuy}`, function (err, res) {
+        if (err) throw err;
+        if (res[0].stock_quantity < answer.howMany) {
+          console.log("Sorry, we don't have enough in stock.")
+          runAgain()
+        } else {
+          console.log("Your order was placed!")
+          var updateProducts = `UPDATE products SET stock_quantity = + (${res[0].stock_quantity} - ${answer.howMany}) WHERE id = ${answer.whatToBuy}`
+          connection.query(updateProducts, function (err, res) {
+            if (err) throw err;
+            console.log("Thanks for shopping with us!")
+            runAgain()
+          });
+        };
+
+      });
+    });
 };
 
-function fulfillOrder() {
-  connection.query("SELECT * FROM products"),
-    function (err, results) {
-      if (err) throw err;
-
-
-    }
-}
+function runAgain() {
+  inquirer.prompt([{
+      type: "confirm",
+      name: "rerun",
+      message: "Would you like to place another order?"
+    }])
+    .then(function (answer) {
+      if (answer.rerun) {
+        runApp()
+      } else {
+        console.log("Come again!");
+        connection.end()
+      };
+    });
+};
