@@ -28,15 +28,15 @@ function runManager() {
         addInventory()
       } else if (answer.checkStatus === "Add product") {
         addProduct()
-      } else connection.end()
+      } else console.log(error)
     })
 }
 
+runManager()
 
 
 function viewProducts() {
-  connection.query("SELECT * FROM products", function (res, err) {
-    console.log(res)
+  connection.query("SELECT * FROM products", function (err, res) {
     if (err) throw err;
     var selectString = "";
     for (var i = 0; i < res.length; i++) {
@@ -44,10 +44,35 @@ function viewProducts() {
       selectString += "Product name: " + res[i].product_name + " | ";
       selectString += "Department: " + res[i].department_name + " | ";
       selectString += "Price: " + res[i].price + " | "
-      selectString += "Quantity: " + res[i].stockQuantity + " |"
+      selectString += "Quantity: " + res[i].stock_quantity + " |"
       console.log(selectString)
     };
+    runAgain()
   });
 };
 
-runManager()
+
+function lowInventory(){
+  connection.query("SELECT * FROM products WHERE stock_quantity < 5", function(err, res){
+    console.log("Product name: " + res[0].product_name) 
+    console.log("Quantity: " + res[0].stock_quantity);
+    runAgain()
+  })
+}
+
+
+function runAgain(){
+  inquirer.prompt([{
+    name: "rerun",
+    type: "confirm",
+    message: "Would you like to check anything else?"
+  }])
+  .then(function(answer){
+    if(answer.rerun){
+      runManager()
+    } else{
+      console.log("Thank you!");
+      connection.end();
+    }
+  })
+}
