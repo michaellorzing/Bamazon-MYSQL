@@ -11,3 +11,6 @@ CREATE TABLE products(
   price DECIMAL(10, 2) NOT NULL,
   stock_quantity INT NOT NULL
 );
+
+INSERT INTO products(product_name, department_name, price, stock_quantity)
+VALUES("carrot", "vegetables", "5", "25");
