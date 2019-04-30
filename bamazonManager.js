@@ -25,9 +25,9 @@ function runManager() {
       } else if (answer.checkStatus === "View low inventory") {
         lowInventory();
       } else if (answer.checkStatus === "Add to inventory") {
-        addInventory()
+        addInventory();
       } else if (answer.checkStatus === "Add product") {
-        addProduct()
+        addProduct();
       } else console.log(error)
     })
 }
@@ -52,27 +52,113 @@ function viewProducts() {
 };
 
 
-function lowInventory(){
-  connection.query("SELECT * FROM products WHERE stock_quantity < 5", function(err, res){
-    console.log("Product name: " + res[0].product_name) 
+function lowInventory() {
+  connection.query("SELECT * FROM products WHERE stock_quantity < 5", function (err, res) {
+    console.log("Product name: " + res[0].product_name)
     console.log("Quantity: " + res[0].stock_quantity);
     runAgain()
-  })
-}
+  });
+};
 
 
-function runAgain(){
+function addInventory() {
   inquirer.prompt([{
-    name: "rerun",
-    type: "confirm",
-    message: "Would you like to check anything else?"
-  }])
-  .then(function(answer){
-    if(answer.rerun){
-      runManager()
-    } else{
-      console.log("Thank you!");
-      connection.end();
+        name: "whatProduct",
+        type: "input",
+        message: "What ID would you like to add inventory to?",
+        validate: function (value) {
+          if (isNaN(value) === false) {
+            return true;
+          }
+          return false;
+        }
+      },
+      {
+        name: "howMuch",
+        type: "input",
+        message: "What would you like to update quantity to?",
+        validate: function (value) {
+          if (isNaN(value) === false) {
+            return true;
+          }
+          return false;
+        }
+      }
+    ])
+    .then(function (answer) {
+      connection.query(`SELECT * FROM products WHERE id = ${answer.whatProduct}`, function (err, res) {
+        if (err) throw err;
+        var updateStock = `UPDATE products SET stock_quantity = ${answer.howMuch} WHERE id = ${answer.whatProduct}`
+        connection.query(updateStock, function (err, res) {
+          if (err) throw err;
+          console.log("Quantity updated.")
+          runAgain();
+        });
+      });
+    });
+};
+
+function addProduct() {
+  inquirer.prompt([{
+      name: "newProduct",
+      type: "input",
+      message: "What product would you like to add?"
+    },
+    {
+      name: "addDepartment",
+      type: "input",
+      message: "What department should it be placed in?"
+    },
+    {
+      name: "whatPrice",
+      type: "input",
+      message: "What price should it be listed at?",
+      validate: function (value) {
+        if (isNaN(value) === false) {
+          return true;
+        }
+        return false;
+      }
+    },
+    {
+      name: "startingQuantity",
+      type: "Input",
+      message: "What is the initial quantity",
+      validate: function (value) {
+        if (isNaN(value) === false) {
+          return true;
+        }
+        return false;
+      }
     }
-  })
-}
+  ]).then(function (answer) {
+    connection.query("INSERT INTO products SET ?", {
+        product_name: answer.newProduct,
+        department_name: answer.addDepartment,
+        price: answer.whatPrice,
+        stock_quantity: answer.startingQuantity
+      },
+      function (err) {
+        if (err) throw err;
+        console.log("New item added.")
+        runAgain()
+      });
+  });
+};
+
+
+function runAgain() {
+  inquirer.prompt([{
+      name: "rerun",
+      type: "confirm",
+      message: "Would you like to check anything else?"
+    }])
+    .then(function (answer) {
+      if (answer.rerun) {
+        runManager()
+      } else {
+        console.log("Thank you!");
+        connection.end();
+      };
+    });
+};
