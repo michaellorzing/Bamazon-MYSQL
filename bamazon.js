@@ -60,6 +60,7 @@ function runApp() {
           runAgain()
         } else {
           console.log("Your order was placed!")
+           console.log(`Your total purchase comes to $${res[0].price * answer.howMany}.00`)
           var updateProducts = `UPDATE products SET stock_quantity = + (${res[0].stock_quantity} - ${answer.howMany}) WHERE id = ${answer.whatToBuy}`
           connection.query(updateProducts, function (err, res) {
             if (err) throw err;
