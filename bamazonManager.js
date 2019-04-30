@@ -54,8 +54,12 @@ function viewProducts() {
 
 function lowInventory() {
   connection.query("SELECT * FROM products WHERE stock_quantity < 5", function (err, res) {
-    console.log("Product name: " + res[0].product_name)
-    console.log("Quantity: " + res[0].stock_quantity);
+    if (res[0] === undefined) {
+      console.log("Inventory levels are sufficient.")
+    } else {
+      console.log("Product name: " + res[0].product_name)
+      console.log("Quantity: " + res[0].stock_quantity);
+    }
     runAgain()
   });
 };

@@ -83,7 +83,7 @@ function runAgain() {
       if (answer.rerun) {
         runApp()
       } else {
-        console.log("Come again!");
+        console.log("See you soon!");
         connection.end()
       };
     });
